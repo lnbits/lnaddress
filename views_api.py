@@ -8,6 +8,8 @@ from lnbits.core.crud import get_user
 from lnbits.core.services import check_transaction_status, create_invoice
 from lnbits.decorators import WalletTypeInfo, get_key_type, check_admin
 
+from lnbits.core import core_app
+
 from . import lnaddress_ext, scheduled_tasks
 from .cloudflare import cloudflare_create_record
 from .crud import (
@@ -24,6 +26,13 @@ from .crud import (
     update_domain,
 )
 from .models import CreateAddress, CreateDomain
+from .lnurl import lnurl_response
+
+
+@core_app.get("/.well-known/lnurlp/{username}")
+async def lnaddress(username: str, request: Request):
+    domain = urlparse(str(request.url)).netloc
+    return await lnurl_response(username, domain, request)
 
 
 # DOMAINS
