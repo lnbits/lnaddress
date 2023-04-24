@@ -1,4 +1,6 @@
-<h1>Lightning Address</h1>
+# Lightning Address - <small>[LNbits](https://github.com/lnbits/lnbits) extension</small>
+<small>For more about LNBits extension check [this tutorial](https://github.com/lnbits/lnbits/wiki/LNbits-Extensions)</small>
+
 <h2>Rent Lightning Addresses on your domain</h2>
 LNAddress extension allows for someone to rent users lightning addresses on their domain.
 
