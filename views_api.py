@@ -29,7 +29,8 @@ from .models import CreateAddress, CreateDomain
 from .lnurl import lnurl_response
 
 
-@core_app.get("/.well-known/lnurlp/{username}")
+# redirected from /.well-known/lnurlp
+@lnaddress_ext.get("/api/v1/well-known/{username}")
 async def lnaddress(username: str, request: Request):
     domain = urlparse(str(request.url)).netloc
     return await lnurl_response(username, domain, request)
