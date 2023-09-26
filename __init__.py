@@ -1,7 +1,6 @@
 import asyncio
 
 from fastapi import APIRouter
-from starlette.staticfiles import StaticFiles
 from typing import List
 
 from lnbits.db import Database
@@ -17,14 +16,13 @@ lnaddress_ext: APIRouter = APIRouter(prefix="/lnaddress", tags=["lnaddress"])
 lnaddress_static_files = [
     {
         "path": "/lnaddress/static",
-        "app": StaticFiles(directory="lnbits/extensions/lnaddress/static"),
         "name": "lnaddress_static",
     }
 ]
 
 
 def lnaddress_renderer():
-    return template_renderer(["lnbits/extensions/lnaddress/templates"])
+    return template_renderer(["lnaddress/templates"])
 
 
 from .lnurl import *  # noqa: F401,F403
