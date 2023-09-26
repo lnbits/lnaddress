@@ -1,7 +1,7 @@
 {
   "name": "Lightning Address",
   "short_description": "Sell LN addresses for your domain",
-	"tile": "/lnaddress/static/image/lnaddress.png",
+  "tile": "/lnaddress/static/image/lnaddress.png",
   "contributors": ["talvasconcelos"],
-  "min_lnbits_version": "0.XX.0"
+  "min_lnbits_version": "0.11.0"
 }
