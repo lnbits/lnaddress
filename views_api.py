@@ -8,9 +8,7 @@ from lnbits.core.crud import get_user
 from lnbits.core.services import check_transaction_status, create_invoice
 from lnbits.decorators import WalletTypeInfo, get_key_type, check_admin
 
-from lnbits.core import core_app
-
-from . import lnaddress_ext, scheduled_tasks
+from . import lnaddress_ext
 from .cloudflare import cloudflare_create_record
 from .crud import (
     check_address_available,
@@ -266,16 +264,3 @@ async def api_address_delete(address_id, g: WalletTypeInfo = Depends(get_key_typ
 
     await delete_address(address_id)
     return "", HTTPStatus.NO_CONTENT
-
-
-
-
-@lnaddress_ext.delete("/api/v1", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)])
-async def api_stop():
-    for t in scheduled_tasks:
-        try:
-            t.cancel()
-        except Exception as ex:
-            logger.warning(ex)
-
-    return {"success": True}
