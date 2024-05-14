@@ -3,5 +3,5 @@
   "short_description": "Sell LN addresses for your domain",
   "tile": "/lnaddress/static/image/lnaddress.png",
   "contributors": ["talvasconcelos"],
-  "min_lnbits_version": "0.11.0"
+  "min_lnbits_version": "0.12.5"
 }
