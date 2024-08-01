@@ -1,13 +1,14 @@
-from datetime import datetime, timedelta
 import hashlib
+from datetime import datetime, timedelta
 
 import httpx
-from fastapi import Query, Request
+from fastapi import APIRouter, Query, Request
 from lnurl import LnurlErrorResponse
 from loguru import logger
 
-from . import lnaddress_ext
 from .crud import get_address, get_address_by_username, get_domain
+
+lnaddress_lnurl_router = APIRouter()
 
 
 async def lnurl_response(username: str, domain: str, request: Request):
@@ -37,7 +38,14 @@ async def lnurl_response(username: str, domain: str, request: Request):
     return resp
 
 
-@lnaddress_ext.get("/lnurl/cb/{address_id}", name="lnaddress.lnurl_callback")
+# redirected from /.well-known/lnurlp
+@lnaddress_lnurl_router.get("/api/v1/well-known/{username}")
+async def lnaddress(username: str, request: Request):
+    domain = request.url.netloc
+    return await lnurl_response(username, domain, request)
+
+
+@lnaddress_lnurl_router.get("/lnurl/cb/{address_id}", name="lnaddress.lnurl_callback")
 async def lnurl_callback(
     address_id, amount: int = Query(...), comment: str = Query("")
 ):

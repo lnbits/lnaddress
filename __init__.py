@@ -3,13 +3,16 @@ import asyncio
 from fastapi import APIRouter
 from loguru import logger
 
-from lnbits.db import Database
-from lnbits.helpers import template_renderer
-from lnbits.tasks import create_permanent_unique_task
-
-db = Database("ext_lnaddress")
+from .crud import db
+from .tasks import wait_for_paid_invoices
+from .views import lnaddress_generic_router
+from .views_api import lnaddress_api_router
+from .views_lnurl import lnaddress_lnurl_router
 
 lnaddress_ext: APIRouter = APIRouter(prefix="/lnaddress", tags=["lnaddress"])
+lnaddress_ext.include_router(lnaddress_generic_router)
+lnaddress_ext.include_router(lnaddress_api_router)
+lnaddress_ext.include_router(lnaddress_lnurl_router)
 
 lnaddress_static_files = [
     {
@@ -25,17 +28,6 @@ lnaddress_redirect_paths = [
     }
 ]
 
-
-def lnaddress_renderer():
-    return template_renderer(["lnaddress/templates"])
-
-
-from .lnurl import *  # noqa: F401,F403
-from .tasks import wait_for_paid_invoices
-from .views import *  # noqa: F401,F403
-from .views_api import *  # noqa: F401,F403
-
-
 scheduled_tasks: list[asyncio.Task] = []
 
 
@@ -48,5 +40,17 @@ def lnaddress_stop():
 
 
 def lnaddress_start():
+    from lnbits.tasks import create_permanent_unique_task
+
     task = create_permanent_unique_task("ext_lnaddress", wait_for_paid_invoices)
     scheduled_tasks.append(task)
+
+
+__all__ = [
+    "db",
+    "lnaddress_ext",
+    "lnaddress_static_files",
+    "lnaddress_redirect_paths",
+    "lnaddress_stop",
+    "lnaddress_start",
+]

@@ -1,14 +1,13 @@
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from fastapi import Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from lnbits.core.crud import get_user
+from lnbits.core.models import WalletTypeInfo
+from lnbits.core.services import check_transaction_status, create_invoice
+from lnbits.decorators import get_key_type
 from loguru import logger
 
-from lnbits.core.crud import get_user
-from lnbits.core.services import check_transaction_status, create_invoice
-from lnbits.decorators import WalletTypeInfo, get_key_type, check_admin
-
-from . import lnaddress_ext
 from .cloudflare import cloudflare_create_record
 from .crud import (
     check_address_available,
@@ -24,18 +23,11 @@ from .crud import (
     update_domain,
 )
 from .models import CreateAddress, CreateDomain
-from .lnurl import lnurl_response
+
+lnaddress_api_router = APIRouter()
 
 
-# redirected from /.well-known/lnurlp
-@lnaddress_ext.get("/api/v1/well-known/{username}")
-async def lnaddress(username: str, request: Request):
-    domain = urlparse(str(request.url)).netloc
-    return await lnurl_response(username, domain, request)
-
-
-# DOMAINS
-@lnaddress_ext.get("/api/v1/domains")
+@lnaddress_api_router.get("/api/v1/domains")
 async def api_domains(
     g: WalletTypeInfo = Depends(get_key_type), all_wallets: bool = Query(False)
 ):
@@ -48,8 +40,8 @@ async def api_domains(
     return [domain.dict() for domain in await get_domains(wallet_ids)]
 
 
-@lnaddress_ext.post("/api/v1/domains")
-@lnaddress_ext.put("/api/v1/domains/{domain_id}")
+@lnaddress_api_router.post("/api/v1/domains")
+@lnaddress_api_router.put("/api/v1/domains/{domain_id}")
 async def api_domain_create(
     request: Request,
     data: CreateDomain,
@@ -79,7 +71,8 @@ async def api_domain_create(
 
         if not cf_response or not cf_response["success"]:
             await delete_domain(domain.id)
-            logger.error("Cloudflare failed with: " + cf_response["errors"][0]["message"])  # type: ignore
+            err_msg = cf_response["errors"][0]["message"]  # type: ignore
+            logger.error(f"Cloudflare failed with: {err_msg}")
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST, detail="Problem with cloudflare."
             )
@@ -87,7 +80,7 @@ async def api_domain_create(
     return domain.dict()
 
 
-@lnaddress_ext.delete("/api/v1/domains/{domain_id}")
+@lnaddress_api_router.delete("/api/v1/domains/{domain_id}")
 async def api_domain_delete(domain_id, g: WalletTypeInfo = Depends(get_key_type)):
     domain = await get_domain(domain_id)
 
@@ -106,7 +99,7 @@ async def api_domain_delete(domain_id, g: WalletTypeInfo = Depends(get_key_type)
 # ADDRESSES
 
 
-@lnaddress_ext.get("/api/v1/addresses")
+@lnaddress_api_router.get("/api/v1/addresses")
 async def api_addresses(
     g: WalletTypeInfo = Depends(get_key_type), all_wallets: bool = Query(False)
 ):
@@ -119,14 +112,14 @@ async def api_addresses(
     return [address.dict() for address in await get_addresses(wallet_ids)]
 
 
-@lnaddress_ext.get("/api/v1/address/availabity/{domain_id}/{username}")
+@lnaddress_api_router.get("/api/v1/address/availabity/{domain_id}/{username}")
 async def api_check_available_username(domain_id, username):
     used_username = await check_address_available(username, domain_id)
 
     return used_username
 
 
-@lnaddress_ext.get("/api/v1/address/{domain}/{username}/{wallet_key}")
+@lnaddress_api_router.get("/api/v1/address/{domain}/{username}/{wallet_key}")
 async def api_get_user_info(username, wallet_key, domain):
     address = await get_address_by_username(username, domain)
 
@@ -144,8 +137,8 @@ async def api_get_user_info(username, wallet_key, domain):
     return address.dict()
 
 
-@lnaddress_ext.post("/api/v1/address/{domain_id}")
-@lnaddress_ext.put("/api/v1/address/{domain_id}/{user}/{wallet_key}")
+@lnaddress_api_router.post("/api/v1/address/{domain_id}")
+@lnaddress_api_router.put("/api/v1/address/{domain_id}/{user}/{wallet_key}")
 async def api_lnaddress_make_address(
     domain_id, data: CreateAddress, user=None, wallet_key=None
 ):
@@ -184,7 +177,10 @@ async def api_lnaddress_make_address(
             payment_hash, payment_request = await create_invoice(
                 wallet_id=domain.wallet,
                 amount=data.sats,
-                memo=f"Renew {data.username}@{domain.domain} for {sats} sats for {data.duration} more days",
+                memo=(
+                    f"Renew {data.username}@{domain.domain} for "
+                    f"{sats} sats for {data.duration} more days"
+                ),
                 extra={
                     "tag": "renew lnaddress",
                     "id": address.id,
@@ -192,10 +188,10 @@ async def api_lnaddress_make_address(
                 },
             )
 
-        except Exception as e:
+        except Exception as exc:
             raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e)
-            )
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)
+            ) from exc
     else:
         used_username = await check_address_available(data.username, data.domain)
         # If username is already taken
@@ -211,13 +207,16 @@ async def api_lnaddress_make_address(
             payment_hash, payment_request = await create_invoice(
                 wallet_id=domain.wallet,
                 amount=sats,
-                memo=f"LNAddress {data.username}@{domain.domain} for {sats} sats for {data.duration} days",
+                memo=(
+                    f"LNAddress {data.username}@{domain.domain} for "
+                    f"{sats} sats for {data.duration} days"
+                ),
                 extra={"tag": "lnaddress"},
             )
-        except Exception as e:
+        except Exception as exc:
             raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e)
-            )
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)
+            ) from exc
 
         address = await create_address(
             payment_hash=payment_hash, wallet=domain.wallet, data=data
@@ -232,7 +231,7 @@ async def api_lnaddress_make_address(
     return {"payment_hash": payment_hash, "payment_request": payment_request}
 
 
-@lnaddress_ext.get("/api/v1/addresses/{payment_hash}")
+@lnaddress_api_router.get("/api/v1/addresses/{payment_hash}")
 async def api_address_send_address(payment_hash):
     address = await get_address(payment_hash)
     assert address
@@ -250,7 +249,7 @@ async def api_address_send_address(payment_hash):
     return {"paid": False}
 
 
-@lnaddress_ext.delete("/api/v1/addresses/{address_id}")
+@lnaddress_api_router.delete("/api/v1/addresses/{address_id}")
 async def api_address_delete(address_id, g: WalletTypeInfo = Depends(get_key_type)):
     address = await get_address(address_id)
     if not address:
