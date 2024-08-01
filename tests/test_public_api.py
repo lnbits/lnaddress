@@ -1,4 +1,6 @@
 import pytest
+
+
 # check GET /.well-known/lnurlp/{username}: wrong username [should fail]
 @pytest.mark.asyncio
 async def test_lnaddress_wrong_hash(client):

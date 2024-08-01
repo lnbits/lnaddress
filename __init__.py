@@ -19,10 +19,10 @@ lnaddress_static_files = [
 ]
 
 lnaddress_redirect_paths = [
-  {
-    "from_path": "/.well-known/lnurlp",
-    "redirect_to_path": "/api/v1/well-known",
-  }
+    {
+        "from_path": "/.well-known/lnurlp",
+        "redirect_to_path": "/api/v1/well-known",
+    }
 ]
 
 
@@ -38,12 +38,14 @@ from .views_api import *  # noqa: F401,F403
 
 scheduled_tasks: list[asyncio.Task] = []
 
+
 def lnaddress_stop():
     for task in scheduled_tasks:
         try:
             task.cancel()
         except Exception as ex:
             logger.warning(ex)
+
 
 def lnaddress_start():
     task = create_permanent_unique_task("ext_lnaddress", wait_for_paid_invoices)
