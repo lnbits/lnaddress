@@ -1,11 +1,10 @@
 import asyncio
 
 import httpx
-from loguru import logger
-
 from lnbits.core.models import Payment
 from lnbits.helpers import get_current_extension_name
 from lnbits.tasks import register_invoice_listener
+from loguru import logger
 
 from .crud import get_address, get_domain, set_address_paid, set_address_renewed
 
@@ -44,7 +43,7 @@ async def call_webhook_on_paid(payment_hash):
             )
             r.raise_for_status()
         except Exception as e:
-            logger.error(f"lnaddress: error calling webhook on paid: {str(e)}")
+            logger.error(f"lnaddress: error calling webhook on paid: {e!s}")
 
 
 async def on_invoice_paid(payment: Payment) -> None:

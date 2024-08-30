@@ -1,19 +1,21 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
+from lnbits.db import Database
+from lnbits.helpers import urlsafe_short_hash
 from loguru import logger
 
-from lnbits.helpers import urlsafe_short_hash
-
-from . import db
 from .models import Addresses, CreateAddress, CreateDomain, Domains
+
+db = Database("ext_lnaddress")
 
 
 async def create_domain(data: CreateDomain) -> Domains:
     domain_id = urlsafe_short_hash()
     await db.execute(
         """
-        INSERT INTO lnaddress.domain (id, wallet, domain, webhook, cf_token, cf_zone_id, cost)
+        INSERT INTO lnaddress.domain
+        (id, wallet, domain, webhook, cf_token, cf_zone_id, cost)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
@@ -72,7 +74,11 @@ async def create_address(
 ) -> Addresses:
     await db.execute(
         """
-        INSERT INTO lnaddress.address (id, wallet, domain, email, username, wallet_key, wallet_endpoint, sats, duration, paid)
+        INSERT INTO lnaddress.address
+        (
+            id, wallet, domain, email, username, wallet_key,
+            wallet_endpoint, sats, duration, paid
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
@@ -96,7 +102,10 @@ async def create_address(
 
 async def get_address(address_id: str) -> Optional[Addresses]:
     row = await db.fetchone(
-        "SELECT a.* FROM lnaddress.address AS a INNER JOIN lnaddress.domain AS d ON a.id = ? AND a.domain = d.id",
+        """
+        SELECT a.* FROM lnaddress.address AS a INNER JOIN
+        lnaddress.domain AS d ON a.id = ? AND a.domain = d.id
+        """,
         (address_id,),
     )
     return Addresses(**row) if row else None
@@ -104,7 +113,10 @@ async def get_address(address_id: str) -> Optional[Addresses]:
 
 async def get_address_by_username(username: str, domain: str) -> Optional[Addresses]:
     row = await db.fetchone(
-        "SELECT a.* FROM lnaddress.address AS a INNER JOIN lnaddress.domain AS d ON a.username = ? AND d.domain = ?",
+        """
+        SELECT a.* FROM lnaddress.address AS a INNER JOIN
+        lnaddress.domain AS d ON a.username = ? AND d.domain = ?
+        """,
         (username, domain),
     )
 
@@ -165,7 +177,9 @@ async def set_address_renewed(address_id: str, duration: int):
 
 async def check_address_available(username: str, domain: str):
     (row,) = await db.fetchone(
-        "SELECT COUNT(username) FROM lnaddress.address WHERE username = ? AND domain = ?",
+        """
+        SELECT COUNT(username) FROM lnaddress.address WHERE username = ? AND domain = ?
+       """,
         (username, domain),
     )
     return row
