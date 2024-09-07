@@ -1,9 +1,9 @@
 import httpx
 
-from .models import Domains
+from .models import Domain
 
 
-async def cloudflare_create_record(domain: Domains, ip: str):
+async def cloudflare_create_record(domain: Domain, ip: str):
     url = (
         "https://api.cloudflare.com/client/v4/zones/"
         + domain.cf_zone_id
@@ -35,7 +35,7 @@ async def cloudflare_create_record(domain: Domains, ip: str):
     return cf_response
 
 
-async def cloudflare_deleterecord(domain: Domains, domain_id: str):
+async def cloudflare_deleterecord(domain: Domain, domain_id: str):
     url = (
         "https://api.cloudflare.com/client/v4/zones/"
         + domain.cf_zone_id

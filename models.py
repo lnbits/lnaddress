@@ -15,7 +15,7 @@ class CreateDomain(BaseModel):
     cost: int = Query(..., ge=0)
 
 
-class Domains(BaseModel):
+class Domain(BaseModel):
     id: str
     wallet: str
     domain: str
@@ -36,7 +36,7 @@ class CreateAddress(BaseModel):
     duration: int = Query(..., ge=1)
 
 
-class Addresses(BaseModel):
+class Address(BaseModel):
     id: str
     wallet: str
     domain: str
