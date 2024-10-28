@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from lnbits.core.crud import get_user
 from lnbits.core.models import WalletTypeInfo
 from lnbits.core.services import check_transaction_status, create_invoice
-from lnbits.decorators import get_key_type
+from lnbits.decorators import require_admin_key, require_invoice_key
 from loguru import logger
 
 from .cloudflare import cloudflare_create_record
@@ -29,7 +29,7 @@ lnaddress_api_router = APIRouter()
 
 @lnaddress_api_router.get("/api/v1/domains")
 async def api_domains(
-    g: WalletTypeInfo = Depends(get_key_type), all_wallets: bool = Query(False)
+    g: WalletTypeInfo = Depends(require_invoice_key), all_wallets: bool = Query(False)
 ):
     wallet_ids = [g.wallet.id]
 
@@ -46,7 +46,7 @@ async def api_domain_create(
     request: Request,
     data: CreateDomain,
     domain_id=None,
-    g: WalletTypeInfo = Depends(get_key_type),
+    g: WalletTypeInfo = Depends(require_admin_key),
 ):
     if domain_id:
         domain = await get_domain(domain_id)
@@ -81,7 +81,7 @@ async def api_domain_create(
 
 
 @lnaddress_api_router.delete("/api/v1/domains/{domain_id}")
-async def api_domain_delete(domain_id, g: WalletTypeInfo = Depends(get_key_type)):
+async def api_domain_delete(domain_id, g: WalletTypeInfo = Depends(require_admin_key)):
     domain = await get_domain(domain_id)
 
     if not domain:
@@ -101,7 +101,7 @@ async def api_domain_delete(domain_id, g: WalletTypeInfo = Depends(get_key_type)
 
 @lnaddress_api_router.get("/api/v1/addresses")
 async def api_addresses(
-    g: WalletTypeInfo = Depends(get_key_type), all_wallets: bool = Query(False)
+    g: WalletTypeInfo = Depends(require_invoice_key), all_wallets: bool = Query(False)
 ):
     wallet_ids = [g.wallet.id]
 
@@ -250,7 +250,9 @@ async def api_address_send_address(payment_hash):
 
 
 @lnaddress_api_router.delete("/api/v1/addresses/{address_id}")
-async def api_address_delete(address_id, g: WalletTypeInfo = Depends(get_key_type)):
+async def api_address_delete(
+    address_id, g: WalletTypeInfo = Depends(require_admin_key)
+):
     address = await get_address(address_id)
     if not address:
         raise HTTPException(

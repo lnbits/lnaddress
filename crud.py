@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
 from lnbits.db import Database
-from lnbits.helpers import insert_query, update_query, urlsafe_short_hash
+from lnbits.helpers import urlsafe_short_hash
 from loguru import logger
 
 from .models import Address, CreateAddress, CreateDomain, Domain
@@ -13,18 +13,13 @@ db = Database("ext_lnaddress")
 async def create_domain(data: CreateDomain) -> Domain:
     domain_id = urlsafe_short_hash()
     domain = Domain(id=domain_id, **data.dict())
-    await db.execute(
-        insert_query("lnaddress.domain", domain),
-        domain.dict(),
-    )
+    await db.insert("lnaddress.domain", domain)
+
     return domain
 
 
 async def update_domain(domain: Domain) -> Domain:
-    await db.execute(
-        update_query("lnaddress.domain", domain),
-        domain.dict(),
-    )
+    await db.update("lnaddress.domain", domain)
     return domain
 
 
@@ -65,10 +60,8 @@ async def create_address(
         paid=False,
         time=int(datetime.now().timestamp()),
     )
-    await db.execute(
-        insert_query("lnaddress.address", address),
-        address.dict(),
-    )
+    await db.insert("lnaddress.address", address)
+
     return address
 
 
