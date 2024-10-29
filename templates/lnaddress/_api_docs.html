@@ -50,7 +50,7 @@
         <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
         <code
           >curl -X GET {{ request.base_url }}lnaddress/api/v1/domains -H
-          "X-Api-Key: {{ user.wallets[0].inkey }}"
+          "X-Api-Key: `invoice_key`"
         </code>
       </q-card-section>
     </q-card>
@@ -86,10 +86,10 @@
         <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
         <code
           >curl -X POST {{ request.base_url }}lnaddress/api/v1/domains -d
-          '{"wallet": "{{ user.wallets[0].id }}", "domain": &lt;string&gt;,
-          "cf_token": &lt;string&gt;,"cf_zone_id": &lt;string&gt;,"webhook":
-          &lt;Optional string&gt; ,"cost": &lt;integer&gt;}' -H "X-Api-Key: {{
-          user.wallets[0].inkey }}" -H "Content-type: application/json"
+          '{"wallet": "", "domain": &lt;string&gt;, "cf_token":
+          &lt;string&gt;,"cf_zone_id": &lt;string&gt;,"webhook": &lt;Optional
+          string&gt; ,"cost": &lt;integer&gt;}' -H "X-Api-Key: `invoice_key`" -H
+          "Content-type: application/json"
         </code>
       </q-card-section>
     </q-card>
@@ -106,8 +106,8 @@
         <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
         <code
           >curl -X DELETE {{ request.base_url
-          }}lnaddress/api/v1/domains/&lt;domain_id&gt; -H "X-Api-Key: {{
-          user.wallets[0].inkey }}"
+          }}lnaddress/api/v1/domains/&lt;domain_id&gt; -H "X-Api-Key:
+          `invoice_key`"
         </code>
       </q-card-section>
     </q-card>
@@ -127,7 +127,7 @@
         <h5 class="text-caption q-mt-sm q-mb-none">Curl example</h5>
         <code
           >curl -X GET {{ request.base_url }}lnaddress/api/v1/addresses -H
-          "X-Api-Key: {{ user.wallets[0].inkey }}"
+          "X-Api-Key: `invoice_key`"
         </code>
       </q-card-section>
     </q-card>
@@ -148,7 +148,7 @@
         <code
           >curl -X GET {{ request.base_url
           }}lnaddress/api/v1/address/&lt;domain&gt;/&lt;username&gt;/&lt;wallet_key&gt;
-          -H "X-Api-Key: {{ user.wallets[0].inkey }}"
+          -H "X-Api-Key: `invoice_key`"
         </code>
       </q-card-section>
     </q-card>
@@ -175,8 +175,7 @@
           &lt;string&gt;, "username": &lt;string&gt;,"email": &lt;Optional
           string&gt;, "wallet_endpoint": &lt;string&gt;, "wallet_key":
           &lt;string&gt;, "sats": &lt;integer&gt; "duration": &lt;integer&gt;,}'
-          -H "X-Api-Key: {{ user.wallets[0].inkey }}" -H "Content-type:
-          application/json"
+          -H "X-Api-Key: `invoice_key`" -H "Content-type: application/json"
         </code>
       </q-card-section>
     </q-card>
