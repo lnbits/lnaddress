@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import Query
@@ -23,7 +24,7 @@ class Domain(BaseModel):
     cf_zone_id: str
     webhook: Optional[str]
     cost: int
-    time: int
+    time: datetime = datetime.now(timezone.utc)
 
 
 class CreateAddress(BaseModel):
@@ -47,7 +48,7 @@ class Address(BaseModel):
     sats: int
     duration: int
     paid: bool
-    time: int
+    time: datetime = datetime.now(timezone.utc)
 
     async def lnurlpay_metadata(self, domain) -> LnurlPayMetadata:
         text = f"Payment to {self.username}"

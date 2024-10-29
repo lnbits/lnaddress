@@ -19,8 +19,7 @@ async def lnurl_response(username: str, domain: str, request: Request):
 
     ## CHECK IF USER IS STILL VALID/PAYING
     now = datetime.now().timestamp()
-    start = datetime.fromtimestamp(address.time)
-    expiration = (start + timedelta(days=address.duration)).timestamp()
+    expiration = (address.time + timedelta(days=address.duration)).timestamp()
 
     if now > expiration:
         return LnurlErrorResponse(reason="Address has expired.").dict()

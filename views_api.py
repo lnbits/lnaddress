@@ -174,7 +174,7 @@ async def api_lnaddress_make_address(
             )
 
         try:
-            payment_hash, payment_request = await create_invoice(
+            payment = await create_invoice(
                 wallet_id=domain.wallet,
                 amount=data.sats,
                 memo=(
@@ -204,7 +204,7 @@ async def api_lnaddress_make_address(
         ## ALL OK - create an invoice and return it to the user
 
         try:
-            payment_hash, payment_request = await create_invoice(
+            payment = await create_invoice(
                 wallet_id=domain.wallet,
                 amount=sats,
                 memo=(
@@ -219,7 +219,7 @@ async def api_lnaddress_make_address(
             ) from exc
 
         address = await create_address(
-            payment_hash=payment_hash, wallet=domain.wallet, data=data
+            payment_hash=payment.payment_hash, wallet=domain.wallet, data=data
         )
 
         if not address:
@@ -228,7 +228,7 @@ async def api_lnaddress_make_address(
                 detail="LNAddress could not be fetched.",
             )
 
-    return {"payment_hash": payment_hash, "payment_request": payment_request}
+    return {"payment_hash": payment.payment_hash, "payment_request": payment.bolt11}
 
 
 @lnaddress_api_router.get("/api/v1/addresses/{payment_hash}")
