@@ -30,7 +30,7 @@ window.app = Vue.createApp({
     amountSats() {
       let dialog = this.renewDialog.info ? this.renewDialog : this.formDialog
       if (!dialog.data.duration) return 0
-      let sats = dialog.data.duration * parseInt('{{ domain_cost }}')
+      let sats = dialog.data.duration * parseInt(domain_cost)
       dialog.data.sats = parseInt(sats)
       return sats
     },
@@ -40,9 +40,7 @@ window.app = Vue.createApp({
         return true
       }
       let available = await axios
-        .get(
-          `/lnaddress/api/v1/address/availabity/${'{{domain_id}}'}/${username}`
-        )
+        .get(`/lnaddress/api/v1/address/availabity/${domain_id}/${username}`)
         .then(res => {
           return res.data < 1
         })
@@ -74,7 +72,7 @@ window.app = Vue.createApp({
       let {username, wallet_key} = this.renewDialog.data
       axios
         .get(
-          `/lnaddress/api/v1/address/{{ domain_domain }}/${username}/${wallet_key}`
+          `/lnaddress/api/v1/address/${domain_domain}/${username}/${wallet_key}`
         )
         .then(res => {
           if (res) {
@@ -84,7 +82,7 @@ window.app = Vue.createApp({
             dt.expiration = moment(
               result.setDate(result.getDate() + res.data.duration)
             ).format('dddd, MMMM Do YYYY, h:mm:ss a')
-            dt.domain = '{{domain_domain}}'
+            dt.domain = domain_domain
             dt.wallet_endpoint = res.data.wallet_endpoint
             this.renewDialog.data = {
               ...this.renewDialog.data,
@@ -104,10 +102,7 @@ window.app = Vue.createApp({
 
       axios
         .put(
-          '/lnaddress/api/v1/address/{{ domain_id }}/' +
-            data.username +
-            '/' +
-            data.wallet_key,
+          `/lnaddress/api/v1/address/${domain_id}/${data.username}/${data.wallet_key}`,
           data
         )
         .then(response => {
@@ -156,14 +151,14 @@ window.app = Vue.createApp({
     },
     submitInvoice() {
       let {data} = this.formDialog
-      data.domain = '{{ domain_id }}'
+      data.domain = domain_id
       if (data.wallet_endpoint == '') {
         data.wallet_endpoint = null
       }
-      data.wallet_endpoint = data.wallet_endpoint ?? '{{ root_url }}'
+      data.wallet_endpoint = data.wallet_endpoint ?? root_url
       data.duration = parseInt(data.duration)
       axios
-        .post('/lnaddress/api/v1/address/{{ domain_id }}', data)
+        .post(`/lnaddress/api/v1/address/${domain_id}`, data)
         .then(response => {
           this.paymentReq = response.data.payment_request
           this.paymentCheck = response.data.payment_hash

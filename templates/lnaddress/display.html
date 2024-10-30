@@ -206,6 +206,10 @@
 
 {% endblock %} {% block scripts %}
 <script>
+  const root_url = '{{root_url}}'
+  const domain_id = '{{domain_id}}'
+  const domain_domain = '{{domain_domain}}'
+  const domain_cost = '{{domain_cost}}'
   const domain_wallet_inkey = '{{domain_wallet_inkey}}'
 </script>
 <script src="{{ static_url_for('lnaddress/static', path='js/display.js') }}"></script>
