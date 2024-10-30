@@ -22,7 +22,7 @@ def lnaddress_renderer():
 @lnaddress_generic_router.get("/", response_class=HTMLResponse)
 async def index(request: Request, user: User = Depends(check_user_exists)):
     return lnaddress_renderer().TemplateResponse(
-        "lnaddress/index.html", {"request": request, "user": user.dict()}
+        "lnaddress/index.html", {"request": request, "user": user.json()}
     )
 
 

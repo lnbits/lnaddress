@@ -1,9 +1,10 @@
 import json
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import Query
 from lnurl.types import LnurlPayMetadata
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CreateDomain(BaseModel):
@@ -15,7 +16,7 @@ class CreateDomain(BaseModel):
     cost: int = Query(..., ge=0)
 
 
-class Domains(BaseModel):
+class Domain(BaseModel):
     id: str
     wallet: str
     domain: str
@@ -23,7 +24,7 @@ class Domains(BaseModel):
     cf_zone_id: str
     webhook: Optional[str]
     cost: int
-    time: int
+    time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CreateAddress(BaseModel):
@@ -36,7 +37,7 @@ class CreateAddress(BaseModel):
     duration: int = Query(..., ge=1)
 
 
-class Addresses(BaseModel):
+class Address(BaseModel):
     id: str
     wallet: str
     domain: str
@@ -47,7 +48,7 @@ class Addresses(BaseModel):
     sats: int
     duration: int
     paid: bool
-    time: int
+    time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     async def lnurlpay_metadata(self, domain) -> LnurlPayMetadata:
         text = f"Payment to {self.username}"
