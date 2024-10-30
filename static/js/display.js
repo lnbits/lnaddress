@@ -39,13 +39,11 @@ window.app = Vue.createApp({
       if (!this.isValidUsername) {
         return true
       }
-      let available = await axios
+      return await axios
         .get(`/lnaddress/api/v1/address/availabity/${domain_id}/${username}`)
         .then(res => {
-          return res.data < 1
+          return res.data
         })
-      console.log(available)
-      return available
     },
     isValidUsername() {
       let username = this.formDialog.data.username
@@ -77,8 +75,8 @@ window.app = Vue.createApp({
         .then(res => {
           if (res) {
             let dt = {}
-            let result = new Date(res.data.time * 1000)
-            dt.start = new Date(res.data.time * 1000)
+            let result = new Date(res.data.time)
+            dt.start = new Date(res.data.time)
             dt.expiration = moment(
               result.setDate(result.getDate() + res.data.duration)
             ).format('dddd, MMMM Do YYYY, h:mm:ss a')
@@ -89,7 +87,6 @@ window.app = Vue.createApp({
               ...dt
             }
             this.renewDialog.info = true
-            console.log(this.renewDialog)
           }
         })
         .catch(function (error) {
@@ -178,7 +175,6 @@ window.app = Vue.createApp({
             axios
               .get(`/lnaddress/api/v1/addresses/${this.paymentCheck}`)
               .then(res => {
-                console.log('pay_check', res.data)
                 if (res.data.paid) {
                   clearInterval(paymentChecker)
                   this.receive = {
@@ -188,24 +184,20 @@ window.app = Vue.createApp({
                   }
                   dismissMsg()
 
-                  console.log(this.formDialog)
                   this.formDialog.data = {}
                   this.$q.notify({
                     type: 'positive',
                     message: 'Sent, thank you!',
                     icon: 'thumb_up'
                   })
-                  console.log('END')
                 }
               })
               .catch(function (error) {
-                console.log(error)
                 LNbits.utils.notifyApiError(error)
               })
           }, 5000)
         })
         .catch(function (error) {
-          console.log(error)
           LNbits.utils.notifyApiError(error)
         })
     }
