@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
 
 from lnbits.db import Database
 from lnbits.helpers import urlsafe_short_hash
@@ -26,7 +25,7 @@ async def delete_domain(domain_id: str) -> None:
     await db.execute("DELETE FROM lnaddress.domain WHERE id = :id", {"id": domain_id})
 
 
-async def get_domain(domain_id: str) -> Optional[Domain]:
+async def get_domain(domain_id: str) -> Domain | None:
     return await db.fetchone(
         "SELECT * FROM lnaddress.domain WHERE id = :id",
         {"id": domain_id},
@@ -34,7 +33,7 @@ async def get_domain(domain_id: str) -> Optional[Domain]:
     )
 
 
-async def get_domains(wallet_ids: Union[str, List[str]]) -> List[Domain]:
+async def get_domains(wallet_ids: str | list[str]) -> list[Domain]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
     q = ",".join([f"'{w}'" for w in wallet_ids])
@@ -63,7 +62,7 @@ async def create_address(
     return address
 
 
-async def get_address(address_id: str) -> Optional[Address]:
+async def get_address(address_id: str) -> Address | None:
     return await db.fetchone(
         """
         SELECT a.* FROM lnaddress.address AS a INNER JOIN
@@ -74,7 +73,7 @@ async def get_address(address_id: str) -> Optional[Address]:
     )
 
 
-async def get_address_by_username(username: str, domain: str) -> Optional[Address]:
+async def get_address_by_username(username: str, domain: str) -> Address | None:
     return await db.fetchone(
         """
         SELECT a.* FROM lnaddress.address AS a INNER JOIN
@@ -89,7 +88,7 @@ async def delete_address(address_id: str) -> None:
     await db.execute("DELETE FROM lnaddress.address WHERE id = :id", {"id": address_id})
 
 
-async def get_addresses(wallet_ids: Union[str, List[str]]) -> List[Address]:
+async def get_addresses(wallet_ids: str | list[str]) -> list[Address]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
     q = ",".join([f"'{w}'" for w in wallet_ids])

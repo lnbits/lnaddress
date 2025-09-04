@@ -49,8 +49,8 @@ def lnaddress_start():
 __all__ = [
     "db",
     "lnaddress_ext",
-    "lnaddress_static_files",
     "lnaddress_redirect_paths",
-    "lnaddress_stop",
     "lnaddress_start",
+    "lnaddress_static_files",
+    "lnaddress_stop",
 ]
