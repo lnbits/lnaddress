@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import Query
 from lnurl.types import LnurlPayMetadata
@@ -22,7 +21,7 @@ class Domain(BaseModel):
     domain: str
     cf_token: str
     cf_zone_id: str
-    webhook: Optional[str]
+    webhook: str | None
     cost: int
     time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -41,7 +40,7 @@ class Address(BaseModel):
     id: str
     wallet: str
     domain: str
-    email: Optional[str]
+    email: str | None
     username: str
     wallet_key: str
     wallet_endpoint: str
