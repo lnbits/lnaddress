@@ -3,43 +3,52 @@ from datetime import datetime, timedelta
 
 import httpx
 from fastapi import APIRouter, Query, Request
-from lnurl import LnurlErrorResponse
-from loguru import logger
+from lnurl import (
+    CallbackUrl,
+    LightningInvoice,
+    LnurlErrorResponse,
+    LnurlPayActionResponse,
+    LnurlPayResponse,
+    MilliSatoshi,
+)
+from pydantic import parse_obj_as
 
 from .crud import get_address, get_address_by_username, get_domain
 
 lnaddress_lnurl_router = APIRouter()
 
 
-async def lnurl_response(username: str, domain: str, request: Request):
+async def lnurl_response(
+    username: str, domain: str, request: Request
+) -> LnurlPayResponse | LnurlErrorResponse:
     address = await get_address_by_username(username, domain)
 
     if not address:
-        return {"status": "ERROR", "reason": "Address not found."}
+        return LnurlErrorResponse(reason="Address not found.")
 
     ## CHECK IF USER IS STILL VALID/PAYING
     now = datetime.now().timestamp()
     expiration = (address.time + timedelta(days=address.duration)).timestamp()
 
     if now > expiration:
-        return LnurlErrorResponse(reason="Address has expired.").dict()
+        return LnurlErrorResponse(reason="Address has expired.")
 
-    resp = {
-        "tag": "payRequest",
-        "callback": request.url_for("lnaddress.lnurl_callback", address_id=address.id),
-        "metadata": await address.lnurlpay_metadata(domain=domain),
-        "commentAllowed": 100,
-        "minSendable": 1000,
-        "maxSendable": 1000000000,
-    }
-
-    logger.debug("RESP", resp)
-    return resp
+    url = request.url_for("lnaddress.lnurl_callback", address_id=address.id)
+    callback = parse_obj_as(CallbackUrl, str(url))
+    return LnurlPayResponse(
+        callback=callback,
+        metadata=await address.lnurlpay_metadata(domain=domain),
+        commentAllowed=100,
+        minSendable=MilliSatoshi(1000),
+        maxSendable=MilliSatoshi(1000000000),
+    )
 
 
 # redirected from /.well-known/lnurlp
 @lnaddress_lnurl_router.get("/api/v1/well-known/{username}")
-async def lnaddress(username: str, request: Request):
+async def lnaddress(
+    username: str, request: Request
+) -> LnurlPayResponse | LnurlErrorResponse:
     domain = request.url.netloc
     return await lnurl_response(username, domain, request)
 
@@ -47,17 +56,18 @@ async def lnaddress(username: str, request: Request):
 @lnaddress_lnurl_router.get("/lnurl/cb/{address_id}", name="lnaddress.lnurl_callback")
 async def lnurl_callback(
     address_id, amount: int = Query(...), comment: str = Query("")
-):
+) -> LnurlPayActionResponse | LnurlErrorResponse:
     if len(comment) > 100:
-        return LnurlErrorResponse(reason="Comment is too long").dict()
+        return LnurlErrorResponse(reason="Comment is too long")
     address = await get_address(address_id)
     if not address:
-        return LnurlErrorResponse(reason="Address not found").dict()
+        return LnurlErrorResponse(reason="Address not found")
 
     amount_received = amount
 
     domain = await get_domain(address.domain)
-    assert domain
+    if not domain:
+        return LnurlErrorResponse(reason="Domain not found")
 
     base_url = (
         address.wallet_endpoint[:-1]
@@ -93,7 +103,5 @@ async def lnurl_callback(
         except Exception:
             return LnurlErrorResponse(reason="ERROR")
 
-    # resp = LnurlPayActionResponse(pr=r["payment_request"], routes=[])
-    resp = {"pr": r["payment_request"], "routes": []}
-
-    return resp
+    invoice = parse_obj_as(LightningInvoice, r["payment_request"])
+    return LnurlPayActionResponse(pr=invoice)
